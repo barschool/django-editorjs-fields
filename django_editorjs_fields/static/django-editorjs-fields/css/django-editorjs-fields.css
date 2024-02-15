@@ -162,3 +162,18 @@ div[data-editorjs-holder] {
 		color: #fff
 	}
 }
+
+.cdx-list code.inline-code{
+	padding: 5px;
+	background:#666;
+	color:#ddd;
+	font-family: monospace;
+	font-size: 11px;
+}
+
+.ce-delimiter.cdx-block:before {
+	content: '* spacer *';
+	line-height: 15px;
+	font-size: 15px;
+	height: unset;
+}

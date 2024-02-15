@@ -1,7 +1,9 @@
 import json
-
+from pprint import pprint
+import re  # noqa
 from django import template
 from django.utils.safestring import mark_safe
+from django.template.loader import render_to_string
 
 register = template.Library()
 
@@ -12,9 +14,26 @@ def generate_paragraph(data):
 
 
 def generate_list(data):
-    list_li = ''.join([f'<li>{item}</li>' for item in data.get('items')])
-    tag = 'ol' if data.get('style') == 'ordered' else 'ul'
-    return f'<{tag}>{list_li}</{tag}>'
+    config = {}
+    list_li = []
+    for index, item in enumerate(data.get('items')):
+        if search := re.search('<code class="inline-code">([^<]+)</code>\s*(.*?)$', item, re.IGNORECASE):
+            if index == 0:
+                config.update(dict(re.compile(r'(\w+)="([^"]*)"').findall(search.group(1))))
+            else:
+                list_li.append({'icon': search.group(1), 'text': search.group(2)})
+        else: 
+            item = {'text': item.replace('<i></i>', '')}
+            if config.get('icon'):
+                item.update({'icon': config.get('icon')})
+            list_li.append(item)
+    
+    if config.get('type'):
+        return render_to_string('catalog/school/partials/lists/index.html', {'type': config.get('type'), 'items': list_li})
+    else:
+        list_li = ''.join([f'<li>{item}</li>' for item in data.get('items')])
+        tag = 'ol' if data.get('style') == 'ordered' else 'ul'
+        return f'<{tag}>{list_li}</{tag}>'
 
 
 def generate_header(data):
@@ -37,11 +56,11 @@ def generate_image(data):
 
     classes = ' '.join(classes)
 
-    return f'<img src="{url}" alt="{caption}" class="{classes}" />'
+    return f'<img src="{url}" alt="{caption}" class="img-fluid {classes}" />'
 
 
 def generate_delimiter():
-    return '<div class="delimiter"></div>'
+    return '<div class="spacer"></div>'
 
 
 def generate_table(data):
@@ -126,6 +145,9 @@ def generate_link(data):
     wrapper += '</a></div>'
     return wrapper
 
+def generate_alert(data):
+    type, message = data.get('type'), data.get('message')
+    return f'<div class="alert alert-{type}" role="alert">{message}</div>'
 
 @register.filter(is_safe=True)
 def editorjs(value):
@@ -170,5 +192,8 @@ def editorjs(value):
             html_list.append(generate_quote(data))
         elif type == 'linktool':
             html_list.append(generate_link(data))
+        elif type == 'alert':
+            html_list.append(generate_alert(data))
+
 
     return mark_safe(''.join(html_list))
