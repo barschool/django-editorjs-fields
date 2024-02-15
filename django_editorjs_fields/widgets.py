@@ -85,6 +85,7 @@ class EditorJsWidget(widgets.Textarea):
         if plugins:
             js_list += ['//cdn.jsdelivr.net/npm/' + p for p in plugins]
 
+        js_list.append('django-editorjs-fields/js/custom.js')
         js_list.append('django-editorjs-fields/js/django-editorjs-fields.js')
 
         return Media(
