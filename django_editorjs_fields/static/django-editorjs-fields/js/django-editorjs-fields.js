@@ -1,4 +1,4 @@
-;(function () {
+; (function () {
   var pluginName = "django_editorjs_fields"
   var pluginHelp =
     "Write about the issue here: https://github.com/2ik/django-editorjs-fields/issues"
@@ -167,6 +167,16 @@
 
       if (areas) {
         for (let i = 0; i < areas.length; i++) {
+          let textareaObj = django.jQuery(areas[i])
+          let editorjsHolder = textareaObj.next("[data-editorjs-holder]")
+          if (editorjsHolder) {
+            let editorjsHolderId = textareaObj.attr('id') + '_editorjs_holder'
+            if (editorjsHolderId != editorjsHolder.attr('id')) {
+              // Fix the editorjs-holder ID
+              editorjsHolder.attr('id', editorjsHolderId)
+            }
+          }
+
           initEditorJsField(areas[i])
         }
       }
