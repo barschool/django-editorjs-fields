@@ -152,6 +152,7 @@
     }
     var editor = new EditorJS(editorConfig)
     holder.setAttribute("data-processed", 1)
+    textarea.setAttribute("data-processed", 1)
   }
 
   function logError(msg) {
@@ -163,7 +164,20 @@
   // Event
   if (typeof django === "object" && django.jQuery) {
     django.jQuery(document).on("formset:added", function (event, $row) {
-      var areas = $row.find("[data-editorjs-textarea]").get()
+      var areas
+
+      if (event.detail && event.detail.$row) {
+        // A CustomEvent that carries the row in its detail
+        var row = event.detail.$row[0] || event.detail.$row
+        areas = row.querySelectorAll("[data-editorjs-textarea]")
+      } else if ($row && $row.length) {
+        // jQuery trigger: the row is the second argument (Django <= 4.0, nested_admin)
+        areas = $row.find("[data-editorjs-textarea]").get()
+      } else {
+        // Native CustomEvent: no jQuery arguments, so take the row off the event, and skip what
+        // is already mounted - nested_admin fires a jQuery trigger *and* a native event per row.
+        areas = event.target.querySelectorAll("[data-editorjs-textarea]:not([data-processed])")
+      }
 
       if (areas) {
         for (let i = 0; i < areas.length; i++) {
